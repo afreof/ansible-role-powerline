@@ -17,20 +17,18 @@
     dest: /etc/bash_powerline.sh
   become: yes
 
-- name: "for each user get the corresponding home directory"
-  shell: echo $HOME
+- name: "retrieve the list of home directories"
+  command: ls /home
   register: home_dirs
-  become: yes
-  become_user: "{{ item }}"
-  with_items: "{{powerline_users}}"
   changed_when: false
 
 - name: "ensure powerline is loaded for configured users"
   lineinfile:
-    dest: "{{ item.stdout }}/.bashrc"
+    dest: "/home/{{ item }}/.bashrc"
     line: "source /etc/bash_powerline.sh"
   become: yes
-  with_items: "{{home_dirs.results}}"
+  when: "item in home_dirs.stdout_lines"
+  with_items: powerline_users
 
 - name: "ensure default top theme for powerline is configured"
   lineinfile:
